@@ -28,9 +28,18 @@ export interface MarketTick {
 
 export interface BettingSnapshot {
   roundId: number;
+  /** Net-of-vig parimutuel multipliers (what bettors actually receive) */
   odds: number[];
+  /** Raw MON amounts staked per agent */
   pools: number[];
   totalPool: number;
+  /** Betting-implied win probability per agent (0-1), computed from seeded pools */
+  probabilities: number[];
+  /**
+   * Performance-implied win probability from live PnL standings (0-1).
+   * null when race hasn't started or no PnL data yet.
+   */
+  perfProbabilities: number[] | null;
   settled: boolean;
   winnerIndex: number | null;
 }

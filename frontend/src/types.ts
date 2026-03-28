@@ -31,9 +31,14 @@ export interface AgentState {
 
 export interface BettingSnapshot {
   roundId: number;
+  /** Net-of-vig parimutuel multipliers shown to bettors */
   odds: number[];
   pools: number[];
   totalPool: number;
+  /** Betting pool-implied win probability per agent (0–1) */
+  probabilities: number[];
+  /** Live-PnL-implied win probability per agent (0–1), null before race starts */
+  perfProbabilities: number[] | null;
   settled: boolean;
   winnerIndex: number | null;
 }

@@ -63,7 +63,7 @@ export default function App() {
   });
 
   const { agents, chartData, leaderName, handlePnlUpdate, reset } = useAgentPnL();
-  const { snapshot, handleOddsUpdate } = useBettingOdds();
+  const { snapshot, prevOdds, handleOddsUpdate } = useBettingOdds();
   const { connectionState } = useMonadWs({
     onDecision: (payload) => setDecisionFeed((cur) => [...cur.slice(-99), payload]),
     onMarketTick: (payload) => {
@@ -218,6 +218,7 @@ export default function App() {
         <QuickBet
           agents={agents}
           snapshot={snapshot}
+          prevOdds={prevOdds}
           mode={roundState.bettingMode}
           userId={userId}
           roundState={roundState}

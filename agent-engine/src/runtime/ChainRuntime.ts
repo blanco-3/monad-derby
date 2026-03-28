@@ -38,11 +38,19 @@ export class ChainRuntime extends BaseRaceRuntime {
     ];
     const oddsRaw = (await this.betting.getAllOdds()) as bigint[];
 
+    const poolAmounts = pools.map((value) => Number(formatEther(value)));
+    const totalPoolNum = Number(formatEther(totalPool));
+    const impliedProbs = poolAmounts.map((p) =>
+      totalPoolNum > 0 ? p / totalPoolNum : 1 / poolAmounts.length
+    );
+
     return {
       roundId: Number(roundId),
       odds: oddsRaw.map((value) => Number(formatEther(value))),
-      pools: pools.map((value) => Number(formatEther(value))),
-      totalPool: Number(formatEther(totalPool)),
+      pools: poolAmounts,
+      totalPool: totalPoolNum,
+      probabilities: impliedProbs,
+      perfProbabilities: null, // enriched by RoundManager.broadcastOdds
       settled,
       winnerIndex: settled ? Number(winnerIndex) : null,
     };

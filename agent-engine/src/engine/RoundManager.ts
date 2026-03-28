@@ -36,6 +36,27 @@ export type RoundManagerEvents = {
   aiProof: AiProofEvent;
 };
 
+/**
+ * Converts live PnL standings to win probabilities via softmax.
+ *
+ * Temperature T=2 means differences in PnL are moderately amplified —
+ * small leads don't overwhelm the market but a clear leader gets
+ * noticeably higher probability (similar to Elo-based prediction models).
+ *
+ * All-zeros input → equal probabilities (race hasn't diverged yet).
+ */
+function computeWinProbabilities(pnls: number[]): number[] {
+  const n = pnls.length;
+  if (n === 0) return [];
+  const T = 2.0;
+  const scaled = pnls.map((p) => p / T);
+  const maxV = Math.max(...scaled);
+  const exps = scaled.map((v) => Math.exp(v - maxV)); // numerically stable
+  const sum = exps.reduce((a, b) => a + b, 0);
+  if (sum === 0) return Array.from({ length: n }, () => 1 / n);
+  return exps.map((e) => Number((e / sum).toFixed(4)));
+}
+
 export class RoundManager extends EventEmitter {
   private readonly feed: MarketDataFeed;
   private readonly executor: TxExecutor;
@@ -153,7 +174,7 @@ export class RoundManager extends EventEmitter {
       throw new Error("betting API only available in mock mode");
     }
     const result = await this.runtime.placeBet(userId, agentIndex, amount);
-    this.emit("oddsUpdate", await this.runtime.getBettingSnapshot());
+    await this.broadcastOdds(); // includes perfProbabilities
     return result;
   }
 
@@ -316,7 +337,12 @@ export class RoundManager extends EventEmitter {
   }
 
   private async broadcastOdds(): Promise<void> {
-    this.emit("oddsUpdate", await this.runtime.getBettingSnapshot());
+    const snapshot = await this.runtime.getBettingSnapshot();
+    const pnls = this.managedAgents.map((a) => a.state.pnlPercent);
+    this.emit("oddsUpdate", {
+      ...snapshot,
+      perfProbabilities: computeWinProbabilities(pnls),
+    });
   }
 
   private clearLiveTimers() {
