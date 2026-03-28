@@ -125,6 +125,15 @@ app.post("/api/start", async (req, res) => {
   }
 });
 
+app.post("/api/stop", async (_req, res) => {
+  try {
+    const result = await manager.endRound();
+    res.json({ ok: true, result });
+  } catch (error) {
+    res.status(400).json({ ok: false, error: error instanceof Error ? error.message : "failed to stop round" });
+  }
+});
+
 app.post("/api/bet", async (req, res) => {
   if (!runtime.placeBet) {
     res.status(400).json({ ok: false, error: "mock betting only" });

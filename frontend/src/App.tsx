@@ -127,6 +127,11 @@ export default function App() {
     });
   };
 
+  const stopRace = async () => {
+    const baseUrl = import.meta.env.VITE_AGENT_HTTP_URL ?? "http://localhost:8787";
+    await fetch(`${baseUrl}/api/stop`, { method: "POST" });
+  };
+
   const sortedAgents = [...agents].sort((a, b) => a.rank - b.rank);
 
   const wsOnline = connectionState === "open";
@@ -159,7 +164,7 @@ export default function App() {
 
         {/* Right: race control + wallet */}
         <div className="flex items-center gap-3">
-          <RaceControl roundState={roundState} onStart={startRaceWithOptions} />
+          <RaceControl roundState={roundState} onStart={startRaceWithOptions} onStop={stopRace} />
           <button
             type="button"
             onClick={() => void open({ view: address ? "Account" : "Connect" })}
