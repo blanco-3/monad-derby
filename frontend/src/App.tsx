@@ -127,7 +127,7 @@ export default function App() {
   const wsOnline = connectionState === "open";
 
   return (
-    <div className="mx-auto min-h-screen max-w-[1800px] px-6 py-5">
+    <div className="mx-auto flex min-h-screen max-w-[1800px] flex-col px-6 py-5">
 
       {/* ── Header ── */}
       <header className="mb-5 flex items-center gap-4">
@@ -193,7 +193,7 @@ export default function App() {
       ) : null}
 
       {/* ── Main grid: Chart | QuickBet | AgentCards ── */}
-      <main className="grid grid-cols-[1fr_220px_320px] gap-5" style={{ height: 580 }}>
+      <main className="grid min-h-0 flex-1 grid-cols-[1fr_220px_320px] gap-5">
 
         {/* Chart */}
         <PnLChart
@@ -216,7 +216,7 @@ export default function App() {
         />
 
         {/* Agent cards */}
-        <div className="grid grid-rows-[repeat(3,1fr)_130px] gap-4">
+        <div className="grid h-full grid-rows-[repeat(3,1fr)_130px] gap-4">
           {sortedAgents.map((agent) => (
             <AgentCard
               key={agent.name}
@@ -229,7 +229,7 @@ export default function App() {
       </main>
 
       {/* ── Bottom: Decision feed ── */}
-      <section className="mt-5 h-[260px]">
+      <section className="mt-5 shrink-0 h-[220px]">
         <TxFeed items={decisionFeed} />
       </section>
     </div>
