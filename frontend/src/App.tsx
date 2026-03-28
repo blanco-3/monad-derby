@@ -2,15 +2,17 @@ import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import { useEffect, useRef, useState } from "react";
 import { AgentCard } from "./components/AgentCard";
 import { AiProofPanel } from "./components/AiProofPanel";
+import { ChatPanel } from "./components/ChatPanel";
 import { Countdown } from "./components/Countdown";
 import { PnLChart } from "./components/PnLChart";
 import { QuickBet } from "./components/QuickBet";
 import { RaceControl } from "./components/RaceControl";
+import { RaceHistoryPanel } from "./components/RaceHistoryPanel";
 import { TxFeed } from "./components/TxFeed";
 import { useAgentPnL } from "./hooks/useAgentPnL";
 import { useBettingOdds } from "./hooks/useBettingOdds";
 import { useMonadWs } from "./hooks/useMonadWs";
-import type { AiProofPayload, ConnectionPayload, DecisionPayload, MarketTickPayload, RoundEndPayload, RoundStatePayload } from "./types";
+import type { AiProofPayload, ConnectionPayload, DecisionPayload, MarketTickPayload, RaceRecord, RoundEndPayload, RoundStatePayload } from "./types";
 
 const INITIAL_ROUND_STATE: RoundStatePayload = {
   mode: "mock",
@@ -45,6 +47,7 @@ export default function App() {
   const [connectionInfo, setConnectionInfo] = useState<ConnectionPayload>(INITIAL_CONNECTION);
   const [marketTick, setMarketTick] = useState<MarketTickPayload | null>(null);
   const [proofs, setProofs] = useState<AiProofPayload[]>([]);
+  const [history, setHistory] = useState<RaceRecord[]>([]);
   const latestPriceRef = useRef<number | null>(null);
   const roundStartedAtRef = useRef<number | null>(null);
 
@@ -82,6 +85,7 @@ export default function App() {
     onRoundEnd: setLatestRoundEnd,
     onConnection: setConnectionInfo,
     onAiProof: (payload) => setProofs((cur) => [...cur.slice(-11), payload]),
+    onHistoryUpdate: setHistory,
   });
 
   useEffect(() => {
@@ -192,6 +196,11 @@ export default function App() {
         </section>
       ) : null}
 
+      {/* ── Race History strip ── */}
+      <section className="mb-5 shrink-0">
+        <RaceHistoryPanel history={history} />
+      </section>
+
       {/* ── Main grid: Chart | QuickBet | AgentCards ── */}
       <main className="grid min-h-0 flex-1 grid-cols-[1fr_220px_320px] gap-5">
 
@@ -228,8 +237,12 @@ export default function App() {
         </div>
       </main>
 
-      {/* ── Bottom: Decision feed ── */}
-      <section className="mt-5 shrink-0 h-[220px]">
+      {/* ── Bottom: Chat | Decision feed ── */}
+      <section className="mt-5 shrink-0 grid grid-cols-[340px_1fr] gap-5 h-[220px]">
+        <ChatPanel
+          wsUrl={import.meta.env.VITE_AGENT_WS_URL ?? "ws://localhost:8787/ws"}
+          userId={userId}
+        />
         <TxFeed items={decisionFeed} />
       </section>
     </div>

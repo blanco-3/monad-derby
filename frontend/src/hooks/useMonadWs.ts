@@ -5,6 +5,7 @@ import type {
   ConnectionPayload,
   DecisionPayload,
   MarketTickPayload,
+  RaceRecord,
   RoundEndPayload,
   RoundStatePayload,
   WsEnvelope,
@@ -19,6 +20,7 @@ type Handlers = {
   onRoundState?: (payload: RoundStatePayload) => void;
   onConnection?: (payload: ConnectionPayload) => void;
   onAiProof?: (payload: AiProofPayload) => void;
+  onHistoryUpdate?: (payload: RaceRecord[]) => void;
 };
 
 export function useMonadWs(handlers: Handlers) {
@@ -72,6 +74,9 @@ export function useMonadWs(handlers: Handlers) {
             break;
           case "aiProof":
             handlersRef.current.onAiProof?.(message.payload as AiProofPayload);
+            break;
+          case "historyUpdate":
+            handlersRef.current.onHistoryUpdate?.(message.payload as RaceRecord[]);
             break;
           default:
             break;

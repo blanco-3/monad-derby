@@ -30,6 +30,16 @@ const manager = new RoundManager(runtime, { ...requestedConfig, mode: runtime.mo
 const server = createServer(app);
 const wss = new WebSocketServer({ server, path: "/ws" });
 const aiProofs: AiProofEvent[] = [];
+
+type RaceRecord = {
+  roundId: number;
+  winnerIndex: number;
+  winnerName: string;
+  finalPnls: number[];
+  endedAt: number;
+  proofHash: string;
+};
+const raceHistory: RaceRecord[] = [];
 let connectionInfo = {
   mode: runtime.mode,
   fallback,
@@ -59,7 +69,19 @@ manager.on("decision", (payload) => broadcast("decision", payload));
 manager.on("pnlUpdate", (payload) => broadcast("pnlUpdate", payload));
 manager.on("oddsUpdate", (payload) => broadcast("oddsUpdate", payload));
 manager.on("roundState", (payload) => broadcast("roundState", payload));
-manager.on("roundEnd", (payload) => broadcast("roundEnd", payload));
+manager.on("roundEnd", (payload) => {
+  raceHistory.push({
+    roundId: payload.roundId,
+    winnerIndex: payload.winnerIndex,
+    winnerName: payload.winnerName,
+    finalPnls: payload.finalPnls,
+    endedAt: payload.endedAt,
+    proofHash: payload.proofHash,
+  });
+  if (raceHistory.length > 100) raceHistory.shift();
+  broadcast("roundEnd", payload);
+  broadcast("historyUpdate", raceHistory);
+});
 manager.on("aiProof", (payload) => {
   aiProofs.push(payload);
   if (aiProofs.length > 24) {
@@ -77,7 +99,12 @@ app.get("/api/status", async (_req, res) => {
     fallback,
     connection: connectionInfo,
     proofs: aiProofs,
+    history: raceHistory,
   });
+});
+
+app.get("/api/history", (_req, res) => {
+  res.json({ history: raceHistory });
 });
 
 app.get("/api/agents", async (_req, res) => {
@@ -122,6 +149,31 @@ wss.on("connection", async (socket) => {
   socket.send(JSON.stringify({ type: "oddsUpdate", payload: await runtime.getBettingSnapshot() }));
   aiProofs.forEach((proof) => {
     socket.send(JSON.stringify({ type: "aiProof", payload: proof }));
+  });
+  if (raceHistory.length > 0) {
+    socket.send(JSON.stringify({ type: "historyUpdate", payload: raceHistory }));
+  }
+
+  // Chat relay: broadcast incoming chat messages to all clients
+  socket.on("message", (data) => {
+    let msg: { type: string; payload: unknown };
+    try {
+      msg = JSON.parse(data.toString()) as { type: string; payload: unknown };
+    } catch {
+      return;
+    }
+    if (msg.type === "chat" && msg.payload && typeof msg.payload === "object") {
+      const p = msg.payload as Record<string, unknown>;
+      const chatMsg = {
+        id: crypto.randomUUID(),
+        userId: String(p.userId ?? ""),
+        nickname: String(p.nickname ?? ""),
+        text: String(p.text ?? "").slice(0, 120),
+        timestamp: Date.now(),
+        color: String(p.color ?? "#fff"),
+      };
+      broadcast("chat", chatMsg);
+    }
   });
 });
 

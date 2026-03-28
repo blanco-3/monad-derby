@@ -132,3 +132,12 @@ export interface WsEnvelope<T = unknown> {
   type: string;
   payload: T;
 }
+
+export interface RaceRecord {
+  roundId: number;
+  winnerIndex: number;
+  winnerName: string;
+  finalPnls: number[];
+  endedAt: number;
+  proofHash: string;
+}
