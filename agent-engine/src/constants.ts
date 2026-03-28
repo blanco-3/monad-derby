@@ -1,6 +1,6 @@
 import type { AgentConfig } from "./agents/AgentConfig.js";
 
-export const DEFAULT_ROUND_DURATION_SECONDS = 120;
+export const DEFAULT_ROUND_DURATION_SECONDS = 60;
 export const DEFAULT_COUNTDOWN_SECONDS = 3;
 export const DEFAULT_FEED_INTERVAL_MS = 500;
 export const DEFAULT_PORT = 8787;
@@ -8,7 +8,7 @@ export const DEFAULT_MARKET_SYMBOL = "BTC/USD" as const;
 export const DEFAULT_STARTING_PRICE = 68_000;
 export const DEFAULT_STARTING_EQUITY = 1_000;
 export const DEFAULT_PRICE_FEED_MODE = "synthetic" as const;
-export const DEFAULT_RANDOMNESS_MODE = "seeded" as const;
+export const DEFAULT_RANDOMNESS_MODE = "full-random" as const;
 export const DEFAULT_AI_EXECUTION_MODE = "disabled" as const;
 export const DEFAULT_AI_MAX_CALLS_PER_AGENT_PER_ROUND = 2;
 export const DEFAULT_COINBASE_WS_URL = "wss://ws-feed.exchange.coinbase.com";

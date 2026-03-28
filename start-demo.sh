@@ -13,8 +13,22 @@ fi
 MODE="${1:-mock}"
 DEFAULT_ANVIL_DEPLOYER_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 DEFAULT_LOCAL_RPC_URL="http://127.0.0.1:8545"
-RPC_URL="${MONAD_RPC_URL:-$DEFAULT_LOCAL_RPC_URL}"
+MONAD_TESTNET_RPC_URL="https://testnet-rpc.monad.xyz"
+MONAD_TESTNET_CHAIN_ID="10143"
+MONAD_TESTNET_EXPLORER="https://testnet.monadexplorer.com"
 CHAIN_AUTO_BOOTSTRAP="${CHAIN_AUTO_BOOTSTRAP:-1}"
+
+# Load .env if present (testnet keys etc.)
+if [ -f "$ROOT_DIR/.env" ]; then
+  set -a; source "$ROOT_DIR/.env"; set +a
+fi
+
+if [ "$MODE" = "testnet" ]; then
+  RPC_URL="${MONAD_RPC_URL:-$MONAD_TESTNET_RPC_URL}"
+  CHAIN_AUTO_BOOTSTRAP="0"   # never start local Anvil for testnet
+else
+  RPC_URL="${MONAD_RPC_URL:-$DEFAULT_LOCAL_RPC_URL}"
+fi
 
 launch_background() {
   local log_file="$1"
@@ -110,6 +124,21 @@ bootstrap_chain_if_needed() {
 cd "$ROOT_DIR"
 if [ "$MODE" = "chain" ]; then
   bootstrap_chain_if_needed
+elif [ "$MODE" = "testnet" ]; then
+  # testnet: contracts must already be deployed, just sync from deployments.json
+  if [ -z "${DEPLOYER_PRIVATE_KEY:-}" ]; then
+    echo "❌ DEPLOYER_PRIVATE_KEY required for testnet mode. Set it in .env or export it."
+    exit 1
+  fi
+  echo "Testnet mode: using RPC $RPC_URL (chain 10143)"
+  echo "Deploying/syncing contracts to Monad testnet..."
+  (
+    cd "$ROOT_DIR/contracts"
+    forge script script/Deploy.s.sol:Deploy --rpc-url "$RPC_URL" --broadcast \
+      >"$DEMO_DIR/contracts.deploy.log" 2>&1
+  ) || { echo "❌ Testnet deploy failed. See $DEMO_DIR/contracts.deploy.log"; exit 1; }
+  node "$ROOT_DIR/scripts/sync-contracts.mjs" >"$DEMO_DIR/contracts.sync.log" 2>&1 \
+    || { echo "❌ Contract sync failed. See $DEMO_DIR/contracts.sync.log"; exit 1; }
 else
   node ./scripts/sync-contracts.mjs >/dev/null 2>&1 || true
 fi
@@ -122,10 +151,12 @@ fi
   if [ "$MODE" = "chain" ] && [ -z "$ENGINE_DEPLOYER_KEY" ]; then
     ENGINE_DEPLOYER_KEY="$DEFAULT_ANVIL_DEPLOYER_KEY"
   fi
+  ENGINE_DEMO_MODE="$MODE"
+  if [ "$MODE" = "testnet" ]; then ENGINE_DEMO_MODE="chain"; fi
   launch_background "$DEMO_DIR/agent-engine.log" "$DEMO_DIR/agent-engine.pid" env \
-    DEMO_MODE="$MODE" \
+    DEMO_MODE="$ENGINE_DEMO_MODE" \
     PRICE_FEED_MODE="${PRICE_FEED_MODE:-synthetic}" \
-    RACE_RANDOMNESS_MODE="${RACE_RANDOMNESS_MODE:-seeded}" \
+    RACE_RANDOMNESS_MODE="${RACE_RANDOMNESS_MODE:-full-random}" \
     AI_EXECUTION_MODE="${AI_EXECUTION_MODE:-disabled}" \
     MONAD_RPC_URL="$RPC_URL" \
     DEPLOYER_PRIVATE_KEY="$ENGINE_DEPLOYER_KEY" \
@@ -138,6 +169,11 @@ fi
     export VITE_MONAD_CHAIN_ID="${VITE_MONAD_CHAIN_ID:-31337}"
     export VITE_MONAD_CHAIN_NAME="${VITE_MONAD_CHAIN_NAME:-Anvil Local}"
     export VITE_MONAD_RPC_URL="${VITE_MONAD_RPC_URL:-$RPC_URL}"
+  elif [ "$MODE" = "testnet" ]; then
+    export VITE_MONAD_CHAIN_ID="${VITE_MONAD_CHAIN_ID:-$MONAD_TESTNET_CHAIN_ID}"
+    export VITE_MONAD_CHAIN_NAME="${VITE_MONAD_CHAIN_NAME:-Monad Testnet}"
+    export VITE_MONAD_RPC_URL="${VITE_MONAD_RPC_URL:-$MONAD_TESTNET_RPC_URL}"
+    export VITE_MONAD_EXPLORER_URL="${VITE_MONAD_EXPLORER_URL:-$MONAD_TESTNET_EXPLORER}"
   fi
   export VITE_AGENT_HTTP_URL="${VITE_AGENT_HTTP_URL:-http://127.0.0.1:8787}"
   export VITE_AGENT_WS_URL="${VITE_AGENT_WS_URL:-ws://127.0.0.1:8787/ws}"
@@ -157,4 +193,8 @@ echo "Frontend log: $DEMO_DIR/frontend.log"
 if [ -f "$DEMO_DIR/anvil.pid" ]; then
   echo "Anvil log: $DEMO_DIR/anvil.log"
 fi
-echo "Demo started in $MODE mode (BTC/USD, ${RACE_RANDOMNESS_MODE:-seeded}, AI ${AI_EXECUTION_MODE:-disabled})."
+echo "Demo started in $MODE mode (BTC/USD, ${RACE_RANDOMNESS_MODE:-full-random}, AI ${AI_EXECUTION_MODE:-disabled})."
+if [ "$MODE" = "testnet" ]; then
+  echo "⛓  Monad Testnet | RPC: $RPC_URL"
+  echo "   Get testnet MON: https://faucet.monad.xyz"
+fi
