@@ -18,6 +18,14 @@ export function useAgentPnL() {
         payload.agents.forEach((agent) => {
           nextPoint[agent.name] = agent.pnlPercent;
         });
+        // Skip this point if no PnL moved — prevents zero-slope flat segments
+        const last = current[current.length - 1];
+        if (last) {
+          const anyMoved = payload.agents.some(
+            (a) => Math.abs(((last[a.name] as number) ?? 0) - (nextPoint[a.name] as number)) >= 0.001,
+          );
+          if (!anyMoved) return current;
+        }
         return [...current.slice(-299), nextPoint];
       });
     },
