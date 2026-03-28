@@ -2,16 +2,17 @@ import type { AgentConfig } from "./agents/AgentConfig.js";
 
 export const DEFAULT_ROUND_DURATION_SECONDS = 60;
 export const DEFAULT_COUNTDOWN_SECONDS = 3;
-export const DEFAULT_FEED_INTERVAL_MS = 500;
+export const DEFAULT_FEED_INTERVAL_MS = 200;
 export const DEFAULT_PORT = 8787;
 export const DEFAULT_MARKET_SYMBOL = "BTC/USD" as const;
 export const DEFAULT_STARTING_PRICE = 68_000;
 export const DEFAULT_STARTING_EQUITY = 1_000;
-export const DEFAULT_PRICE_FEED_MODE = "synthetic" as const;
+export const DEFAULT_PRICE_FEED_MODE = "coinbase" as const;
 export const DEFAULT_RANDOMNESS_MODE = "full-random" as const;
 export const DEFAULT_AI_EXECUTION_MODE = "disabled" as const;
 export const DEFAULT_AI_MAX_CALLS_PER_AGENT_PER_ROUND = 2;
-export const DEFAULT_COINBASE_WS_URL = "wss://ws-feed.exchange.coinbase.com";
+/** Binance aggTrade stream — fires on every aggregated trade, globally accessible */
+export const DEFAULT_COINBASE_WS_URL = "wss://stream.binance.com:9443/ws/btcusdt@aggTrade";
 
 export const ANVIL_DEFAULT_PRIVATE_KEYS = [
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",

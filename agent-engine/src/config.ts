@@ -65,7 +65,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     autoRestartDelaySeconds: Number(env.AUTO_RESTART_DELAY_SECONDS ?? 8),
     race: {
       market: DEFAULT_MARKET_SYMBOL,
-      priceFeedMode: env.PRICE_FEED_MODE === "coinbase" ? "coinbase" : DEFAULT_PRICE_FEED_MODE,
+      priceFeedMode: (env.PRICE_FEED_MODE === "synthetic" || env.PRICE_FEED_MODE === "coinbase") ? env.PRICE_FEED_MODE : DEFAULT_PRICE_FEED_MODE,
       randomnessMode: env.RACE_RANDOMNESS_MODE === "full-random" ? "full-random" : DEFAULT_RANDOMNESS_MODE,
       roundSeed: env.ROUND_SEED,
       aiExecutionMode: parseAiExecutionMode(env.AI_EXECUTION_MODE),

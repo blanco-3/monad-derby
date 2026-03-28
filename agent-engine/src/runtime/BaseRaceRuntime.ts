@@ -420,6 +420,14 @@ export abstract class BaseRaceRuntime implements RuntimeAdapter {
     return roundTo(Math.max(0, (timestamp - this.startedAt) / 1000), 1);
   }
 
+  setLivePriceCallback(fn: () => void): void {
+    this.driver.setOnLiveTick(fn);
+  }
+
+  clearLivePriceCallback(): void {
+    this.driver.clearOnLiveTick();
+  }
+
   protected abstract prepareBettingRound(): Promise<number>;
   protected abstract startBettingRound(durationSeconds: number): Promise<void>;
   protected abstract finalizeBettingRound(result: {

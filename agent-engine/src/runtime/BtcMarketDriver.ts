@@ -11,10 +11,18 @@ type ScenarioState = {
   breakoutDirection: 1 | -1;
 };
 
-type CoinbaseMessage = {
+/** Handles both Coinbase ticker and Binance aggTrade / trade / 24hrTicker formats */
+type LiveFeedMessage = {
+  // Coinbase ticker
   type?: string;
   product_id?: string;
   price?: string;
+  // Binance (aggTrade, trade): price field is "p"
+  // Binance (24hrTicker): price field is "c"
+  e?: string;  // event type
+  s?: string;  // symbol
+  p?: string;  // price (aggTrade/trade)
+  c?: string;  // current price (24hrTicker)
 };
 
 /**
@@ -60,6 +68,9 @@ export class BtcMarketDriver {
   private coinbaseSocket: WebSocket | null = null;
   private coinbaseConnected = false;
   private roundStartedAt = Date.now();
+  private onLiveTick?: () => void;
+  private lastLivePushAt = 0;
+  private readonly LIVE_PUSH_DEBOUNCE_MS = 150;
 
   // Multi-phase scenario management
   private scenario: ScenarioState = { name: "range", anchorPrice: 68_000, breakoutDirection: 1 };
@@ -292,30 +303,70 @@ export class BtcMarketDriver {
     return Math.sqrt(variance);
   }
 
-  // ─── Coinbase live feed ───────────────────────────────────────────────────
+  // ─── Live price push callback ─────────────────────────────────────────────
+
+  /**
+   * Register a callback to be invoked immediately when a new live price arrives.
+   * Debounced to at most once every 150 ms to avoid flooding the market refresh loop.
+   */
+  setOnLiveTick(fn: () => void): void {
+    this.onLiveTick = fn;
+  }
+
+  clearOnLiveTick(): void {
+    this.onLiveTick = undefined;
+  }
+
+  // ─── Live feed connection ─────────────────────────────────────────────────
 
   private isLiveFresh(): boolean {
     return this.coinbaseConnected && this.lastLivePrice !== null && Date.now() - this.lastLiveAt < 5_000;
   }
 
   private connectCoinbase(): void {
-    this.coinbaseSocket = new WebSocket(this.config.race.coinbaseWsUrl);
+    const wsUrl = this.config.race.coinbaseWsUrl;
+    const isBinance = wsUrl.includes("binance");
+
+    this.coinbaseSocket = new WebSocket(wsUrl);
     this.coinbaseSocket.on("open", () => {
       this.coinbaseConnected = true;
-      this.coinbaseSocket?.send(JSON.stringify({
-        type: "subscribe",
-        product_ids: ["BTC-USD"],
-        channels: ["ticker", "heartbeat"],
-      }));
+      // Coinbase requires a subscription message; Binance uses URL-based stream selection
+      if (!isBinance) {
+        this.coinbaseSocket?.send(JSON.stringify({
+          type: "subscribe",
+          product_ids: ["BTC-USD"],
+          channels: ["ticker", "heartbeat"],
+        }));
+      }
     });
     this.coinbaseSocket.on("message", (raw) => {
       try {
-        const payload = JSON.parse(raw.toString()) as CoinbaseMessage;
-        if (payload.type !== "ticker" || payload.product_id !== "BTC-USD" || !payload.price) return;
-        const price = Number(payload.price);
-        if (!Number.isFinite(price) || price <= 0) return;
+        const payload = JSON.parse(raw.toString()) as LiveFeedMessage;
+        let price: number | null = null;
+
+        // Coinbase ticker
+        if (payload.type === "ticker" && payload.product_id === "BTC-USD" && payload.price) {
+          price = Number(payload.price);
+        }
+        // Binance aggTrade / trade
+        else if ((payload.e === "aggTrade" || payload.e === "trade") && payload.p) {
+          price = Number(payload.p);
+        }
+        // Binance 24hr mini/full ticker
+        else if ((payload.e === "24hrTicker" || payload.e === "24hrMiniTicker") && payload.c) {
+          price = Number(payload.c);
+        }
+
+        if (price === null || !Number.isFinite(price) || price <= 0) return;
         this.lastLivePrice = price;
         this.lastLiveAt = Date.now();
+
+        // Push-on-receive: fire callback immediately (debounced)
+        const now = Date.now();
+        if (this.onLiveTick && now - this.lastLivePushAt >= this.LIVE_PUSH_DEBOUNCE_MS) {
+          this.lastLivePushAt = now;
+          this.onLiveTick();
+        }
       } catch { /* ignore */ }
     });
     const reconnect = () => {

@@ -1,73 +1,140 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none">
   <defs>
-    <radialGradient id="bg" cx="55%" cy="45%" r="55%">
-      <stop offset="0%" stop-color="#2a2460"/>
-      <stop offset="100%" stop-color="#0d0b1e"/>
+    <!-- Background -->
+    <radialGradient id="bg" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#21196a"/>
+      <stop offset="100%" stop-color="#0a0816"/>
     </radialGradient>
-    <linearGradient id="body" x1="20%" y1="0%" x2="85%" y2="100%">
-      <stop offset="0%" stop-color="#b0aaf5"/>
-      <stop offset="45%" stop-color="#7F77DD"/>
-      <stop offset="100%" stop-color="#4a44a8"/>
+    <!-- Main body gradient -->
+    <linearGradient id="body" x1="15%" y1="5%" x2="80%" y2="95%">
+      <stop offset="0%" stop-color="#c4bfff"/>
+      <stop offset="40%" stop-color="#8b84e8"/>
+      <stop offset="100%" stop-color="#4840a0"/>
     </linearGradient>
-    <linearGradient id="mane" x1="0%" y1="0%" x2="60%" y2="100%">
-      <stop offset="0%" stop-color="#5a54c0"/>
-      <stop offset="100%" stop-color="#322e80"/>
+    <!-- Mane gradient -->
+    <linearGradient id="mane1" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6b62d8"/>
+      <stop offset="100%" stop-color="#2e2870"/>
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+    <linearGradient id="mane2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8880e0" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#3832888" stop-opacity="0.4"/>
+    </linearGradient>
+    <!-- Soft glow around body -->
+    <filter id="glow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Mane blur -->
+    <filter id="mblur" x="-20%" y="-10%" width="140%" height="120%">
+      <feGaussianBlur stdDeviation="1.2"/>
     </filter>
   </defs>
 
-  <!-- Background circle -->
+  <!-- Dark background circle -->
   <circle cx="50" cy="50" r="50" fill="url(#bg)"/>
 
-  <!-- Mane / back of neck (darker layer behind) -->
-  <path fill="url(#mane)" opacity="0.7" d="
-    M 22 90
-    C 18 76 20 62 24 52
-    C 22 46 20 40 22 34
-    C 18 42 16 54 16 66
-    C 16 78 18 86 22 90 Z
+  <!-- ═══════════════════════════════════════════
+       MANE — rendered BEHIND the head (z-order)
+       Flowing strands going left/backward
+  ════════════════════════════════════════════ -->
+
+  <!-- Mane outer shadow / bloom -->
+  <path filter="url(#mblur)" fill="#5a52c0" opacity="0.5" d="
+    M 24 19
+    C 14 24 6 36 6 50
+    C 2 46 0 58 2 70
+    C -2 66 -2 78 4 86
+    L 8 88
+    C 6 78 6 66 8 56
+    C 6 44 12 32 20 24 Z
   "/>
 
-  <!-- Main head silhouette -->
+  <!-- Mane strand 1 — widest, sweeps most dramatically -->
+  <path fill="url(#mane1)" opacity="0.82" d="
+    M 24 19
+    C 16 23 8 34 8 48
+    C 4 44 2 56 4 66
+    C 0 62 0 74 4 82
+    L 10 84
+    C 8 74 8 62 10 52
+    C 10 40 16 30 22 24
+    C 23 22 24 20 24 19 Z
+  "/>
+
+  <!-- Mane strand 2 — thinner, slight offset -->
+  <path fill="#9088e8" opacity="0.55" d="
+    M 22 26
+    C 14 30 8 42 8 54
+    C 4 52 2 62 4 72
+    L 8 72
+    C 8 64 10 54 12 46
+    C 14 36 18 30 22 26 Z
+  "/>
+
+  <!-- Mane strand 3 — wispy accent at top -->
+  <path fill="#b0aaee" opacity="0.35" d="
+    M 26 16
+    C 18 20 12 28 10 38
+    C 8 32 8 38 10 44
+    L 14 44
+    C 14 36 18 28 24 20 Z
+  "/>
+
+  <!-- Mane highlight strand -->
+  <path fill="#d0ccff" opacity="0.2" d="
+    M 22 22 C 16 26 12 34 12 44 C 10 42 10 50 12 56 L 14 56 C 12 50 14 40 18 32 C 20 28 22 24 22 22 Z
+  "/>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN HEAD SILHOUETTE
+  ════════════════════════════════════════════ -->
   <path fill="url(#body)" filter="url(#glow)" d="
     M 22 90
-    C 18 76 20 62 24 52
-    C 24 44 26 36 30 28
-    C 32 24 36 18 40 14
-    C 42 10 42 7 40 5
-    L 36 1
-    L 38 8
-    C 40 10 44 12 48 14
-    C 54 16 60 20 66 26
-    C 70 30 74 36 74 44
-    C 74 50 72 54 68 58
-    C 64 62 58 64 54 64
-    C 50 64 46 66 44 68
-    C 42 70 40 73 38 78
-    C 36 83 40 90 50 90
+    C 18 76 16 64 18 52
+    C 19 44 20 38 22 30
+    C 22 24 22 20 24 18
+    L 30 6
+    L 38 16
+    C 40 15 44 14 48 16
+    C 54 18 60 24 66 34
+    C 70 40 72 46 72 52
+    C 72 58 70 64 66 68
+    C 62 72 56 74 48 74
+    C 44 74 38 72 34 68
+    C 28 64 24 58 24 52
+    C 24 62 26 74 32 84
+    L 44 90
     L 22 90 Z
   "/>
 
-  <!-- Ear inner highlight -->
-  <path fill="#d0ccff" opacity="0.45" d="M 40 5 L 36 1 L 38 8 L 40 9 Z"/>
+  <!-- ═══════════════════════════════════════════
+       DETAILS
+  ════════════════════════════════════════════ -->
 
-  <!-- Eye -->
-  <ellipse cx="62" cy="30" rx="5" ry="4.5" fill="#08071a"/>
-  <circle cx="63.5" cy="28.5" r="2" fill="white" opacity="0.65"/>
-  <circle cx="62.5" cy="30.5" r="0.8" fill="white" opacity="0.25"/>
+  <!-- Ear inner highlight (inner ear = lighter) -->
+  <path fill="#d8d4ff" opacity="0.5" d="M 30 6 L 38 16 L 32 17 Z"/>
 
-  <!-- Nostril -->
-  <ellipse cx="70" cy="51" rx="3.2" ry="2" transform="rotate(-18 70 51)" fill="#2e2878" opacity="0.6"/>
-
-  <!-- Face highlight (bright specular on bridge) -->
-  <path fill="white" opacity="0.09" d="
-    M 48 14 C 54 16 60 20 66 26 C 68 28 70 31 72 35
-    C 68 28 62 22 54 17 C 50 15 48 14 48 14 Z
+  <!-- Face highlight / sheen on nose bridge -->
+  <path fill="white" opacity="0.1" d="
+    M 48 16 C 54 18 60 24 66 34 C 68 38 70 42 70 48
+    C 66 38 60 26 52 20 C 50 18 48 16 48 16 Z
   "/>
 
-  <!-- Subtle forehead gloss -->
-  <ellipse cx="44" cy="20" rx="6" ry="4" fill="white" opacity="0.06" transform="rotate(-20 44 20)"/>
+  <!-- Forehead specular -->
+  <ellipse cx="46" cy="22" rx="5" ry="4" fill="white" opacity="0.07" transform="rotate(-25 46 22)"/>
+
+  <!-- Eye (dark, slightly off-round, with glint) -->
+  <ellipse cx="58" cy="30" rx="5.5" ry="5" fill="#07071a"/>
+  <ellipse cx="58" cy="30" rx="4.5" ry="4" fill="#0e0d28"/>
+  <circle cx="59.5" cy="28.5" r="2.2" fill="white" opacity="0.7"/>
+  <circle cx="58.5" cy="31" r="0.9" fill="white" opacity="0.2"/>
+
+  <!-- Nostril (subtle, ellipse with rotation) -->
+  <ellipse cx="69" cy="56" rx="3.2" ry="2" transform="rotate(-20 69 56)" fill="#2c2878" opacity="0.55"/>
+
+  <!-- Chin/jaw muscle shadow -->
+  <path fill="#2e2880" opacity="0.2" d="
+    M 48 74 C 44 74 38 72 34 68 C 32 70 30 72 30 76 C 34 76 42 76 48 74 Z
+  "/>
 </svg>

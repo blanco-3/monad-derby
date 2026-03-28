@@ -63,6 +63,7 @@ export class RoundManager extends EventEmitter {
   private readonly managedAgents: ManagedAgent[] = [];
   private readonly agentIntervals = new Map<string, NodeJS.Timeout>();
   private marketInterval: NodeJS.Timeout | null = null;
+  private refreshingMarket = false;
   private countdownInterval: NodeJS.Timeout | null = null;
   private endTimer: NodeJS.Timeout | null = null;
   private countdownRemaining: number | null = null;
@@ -210,6 +211,10 @@ export class RoundManager extends EventEmitter {
     await this.broadcastState();
     await this.broadcastOdds();
 
+    // Push-on-receive: trigger market refresh immediately when live price arrives
+    this.runtime.setLivePriceCallback?.(() => void this.refreshMarket());
+
+    // Fallback polling interval (covers synthetic mode + live feed gaps)
     this.marketInterval = setInterval(() => {
       void this.refreshMarket();
     }, this.config.feedIntervalMs);
@@ -227,12 +232,17 @@ export class RoundManager extends EventEmitter {
   }
 
   private async refreshMarket(): Promise<void> {
-    if (this.status.phase !== "live") return;
-    const tick = await this.feed.poll();
-    this.status = await this.runtime.getStatus();
-    this.emit("marketTick", tick);
-    await this.refreshPnls();
-    await this.broadcastOdds();
+    if (this.status.phase !== "live" || this.refreshingMarket) return;
+    this.refreshingMarket = true;
+    try {
+      const tick = await this.feed.poll();
+      this.status = await this.runtime.getStatus();
+      this.emit("marketTick", tick);
+      await this.refreshPnls();
+      await this.broadcastOdds();
+    } finally {
+      this.refreshingMarket = false;
+    }
   }
 
   private async runAgentLoop(agent: ManagedAgent): Promise<void> {
@@ -360,6 +370,9 @@ export class RoundManager extends EventEmitter {
     if (this.endTimer) clearTimeout(this.endTimer);
     this.marketInterval = null;
     this.endTimer = null;
+
+    // Stop live price push callbacks
+    this.runtime.clearLivePriceCallback?.();
 
     for (const handle of this.agentIntervals.values()) {
       clearInterval(handle);

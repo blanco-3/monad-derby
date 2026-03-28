@@ -137,4 +137,7 @@ export interface RuntimeAdapter {
   getBettingSnapshot(): Promise<BettingSnapshot>;
   getStatus(): Promise<RuntimeStatus>;
   placeBet?(userId: string, agentIndex: number, amount: number): Promise<PlaceBetResult>;
+  /** Register a callback invoked immediately on each live price tick (debounced). */
+  setLivePriceCallback?(fn: () => void): void;
+  clearLivePriceCallback?(): void;
 }
