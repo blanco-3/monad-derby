@@ -42,7 +42,12 @@ export function useMonadWs(handlers: Handlers) {
       };
 
       ws.onmessage = (event) => {
-        const message = JSON.parse(event.data) as WsEnvelope;
+        let message: WsEnvelope;
+        try {
+          message = JSON.parse(event.data) as WsEnvelope;
+        } catch {
+          return;
+        }
         switch (message.type) {
           case "decision":
             handlersRef.current.onDecision?.(message.payload as DecisionPayload);

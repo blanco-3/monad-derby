@@ -47,6 +47,10 @@ export function PnLChart({ data, leaderName, latestPrice, priceSource, seed, reg
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 16,
             }}
+            formatter={(value: number, name: string) => {
+              if (name === "BTC") return [`$${value.toFixed(2)}`, "BTC Price"];
+              return [`${value.toFixed(2)}%`, name];
+            }}
           />
           <Legend />
           <Line

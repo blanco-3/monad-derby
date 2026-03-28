@@ -78,6 +78,9 @@ contract BettingPool {
         RoundPool storage roundPool = roundPools[activeRoundId];
         require(!roundPool.settled, "BettingPool: round settled");
         require(agentIndex < roundPool.agentPools.length, "BettingPool: invalid agent");
+        // 라운드가 아직 진행 중인지 확인 (결과 공개 후 베팅 방지)
+        (, , , bool roundActive, , , ) = arena.getCurrentRound();
+        require(roundActive, "BettingPool: race already ended");
         require(msg.value > 0, "BettingPool: no value");
 
         roundPool.agentPools[agentIndex] += msg.value;

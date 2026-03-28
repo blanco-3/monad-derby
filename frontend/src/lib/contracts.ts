@@ -1,7 +1,12 @@
 import { generatedAbis, generatedContractAddresses } from "./contracts.generated";
 
 export const bettingPoolAbi = [
-  ...(generatedAbis.bettingPool.length > 0 ? generatedAbis.bettingPool : ["function placeBet(uint256 agentIndex) payable"]),
+  ...(generatedAbis.bettingPool.length > 0
+    ? generatedAbis.bettingPool
+    : [
+        "function placeBet(uint256 agentIndex) payable",
+        "function claimWinnings() external",
+      ]),
 ] as const;
 
 export const contractAddresses = {

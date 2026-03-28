@@ -18,7 +18,7 @@ export function useAgentPnL() {
           payload.agents.forEach((agent) => {
             nextPoint[agent.name] = agent.pnlPercent;
           });
-          return [...current.slice(-199), nextPoint];
+          return [...current.slice(-299), nextPoint];
         });
       });
     },

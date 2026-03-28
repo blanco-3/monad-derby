@@ -87,7 +87,15 @@ export default function App() {
 
   useEffect(() => {
     const boot = async () => {
-      const statusResponse = await fetch(import.meta.env.VITE_AGENT_HTTP_URL ?? "http://localhost:8787/api/status");
+      const baseUrl = import.meta.env.VITE_AGENT_HTTP_URL ?? "http://localhost:8787";
+      let statusResponse: Response;
+      try {
+        statusResponse = await fetch(`${baseUrl}/api/status`);
+      } catch {
+        // 백엔드 아직 미준비 — 기본 상태 유지
+        return;
+      }
+      if (!statusResponse.ok) return;
       const statusData = (await statusResponse.json()) as {
         status: RoundStatePayload;
         betting: typeof snapshot;
@@ -100,7 +108,7 @@ export default function App() {
       setConnectionInfo(statusData.connection);
       setProofs(statusData.proofs ?? []);
 
-      const agentsResponse = await fetch((import.meta.env.VITE_AGENT_HTTP_URL ?? "http://localhost:8787") + "/api/agents");
+      const agentsResponse = await fetch(`${baseUrl}/api/agents`);
       const agentsData = (await agentsResponse.json()) as { agents: typeof agents };
       handlePnlUpdate({ agents: agentsData.agents }, statusData.status.startedAt, latestPriceRef.current);
     };
@@ -110,12 +118,9 @@ export default function App() {
 
   const sortedAgents = useMemo(() => [...agents].sort((a, b) => a.rank - b.rank), [agents]);
 
-  const startRace = async () => {
-    return;
-  };
-
   const startRaceWithOptions = async (options: { randomnessMode: "seeded" | "full-random"; seed: string | null }) => {
-    await fetch((import.meta.env.VITE_AGENT_HTTP_URL ?? "http://localhost:8787") + "/api/start", {
+    const baseUrl = import.meta.env.VITE_AGENT_HTTP_URL ?? "http://localhost:8787";
+    await fetch(`${baseUrl}/api/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(options),

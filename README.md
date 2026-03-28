@@ -97,15 +97,15 @@ cd ../frontend && npm install
 ### 2. Verify the repo
 
 ```bash
-cd /Users/blanco/monad-derby/contracts && forge test
-cd /Users/blanco/monad-derby/agent-engine && npm test
-cd /Users/blanco/monad-derby/frontend && npm run build
+cd contracts && forge test
+cd agent-engine && npm test
+cd frontend && npm run build
 ```
 
 ### 3. Start the default mock demo
 
 ```bash
-cd /Users/blanco/monad-derby
+cd .
 ./start-demo.sh
 ```
 
@@ -114,7 +114,7 @@ Open `http://localhost:5173`.
 ### 4. Stop the demo
 
 ```bash
-cd /Users/blanco/monad-derby
+cd .
 ./stop-demo.sh
 ```
 
@@ -123,7 +123,7 @@ cd /Users/blanco/monad-derby
 Local chain mode now bootstraps itself for Anvil demos.
 
 ```bash
-cd /Users/blanco/monad-derby
+cd .
 ./start-demo.sh chain
 ```
 

@@ -1,5 +1,5 @@
 import { useAppKit, useAppKitAccount, useAppKitNetwork, useAppKitProvider } from "@reown/appkit/react";
-import { BrowserProvider, Contract, parseEther } from "ethers";
+import { BrowserProvider, Contract, parseEther, type Eip1193Provider } from "ethers";
 import { useEffect, useState } from "react";
 import { bettingPoolAbi, contractAddresses } from "../lib/contracts";
 import { usingFallbackReownProjectId } from "../lib/reown";
@@ -19,6 +19,7 @@ export function BetPanel({ agents, snapshot, mode, userId, latestRoundEnd }: Pro
   const [confirmation, setConfirmation] = useState<string | null>(null);
   const [lastBet, setLastBet] = useState<{ agentIndex: number; amount: number } | null>(null);
   const [placing, setPlacing] = useState(false);
+  const [claiming, setClaiming] = useState(false);
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount({ namespace: "eip155" });
   const { chainId } = useAppKitNetwork();
@@ -74,7 +75,7 @@ export function BetPanel({ agents, snapshot, mode, userId, latestRoundEnd }: Pro
         }
         if (!contractAddresses.betting) throw new Error("Betting contract missing");
 
-        const provider = new BrowserProvider(walletProvider as never, chainId ? Number(chainId) : undefined);
+        const provider = new BrowserProvider(walletProvider as Eip1193Provider, chainId ? Number(chainId) : undefined);
         const signer = await provider.getSigner(walletAddress);
         const contract = new Contract(contractAddresses.betting, bettingPoolAbi, signer);
         const tx = await contract.placeBet(selectedAgent, { value: parseEther(numericAmount.toString()) });
@@ -90,9 +91,41 @@ export function BetPanel({ agents, snapshot, mode, userId, latestRoundEnd }: Pro
     }
   };
 
+  const claimWinnings = async () => {
+    if (!isConnected || !walletProvider || !walletAddress) {
+      setConfirmation("지갑을 먼저 연결하세요");
+      await open({ view: "Connect" });
+      return;
+    }
+    if (!contractAddresses.betting) {
+      setConfirmation("베팅 컨트랙트 주소가 없습니다");
+      return;
+    }
+    setClaiming(true);
+    try {
+      const provider = new BrowserProvider(walletProvider as Eip1193Provider, chainId ? Number(chainId) : undefined);
+      const signer = await provider.getSigner(walletAddress);
+      const contract = new Contract(contractAddresses.betting, bettingPoolAbi, signer);
+      const tx = await contract.claimWinnings();
+      await tx.wait();
+      setConfirmation("상금 수령 완료!");
+    } catch (error) {
+      setConfirmation(error instanceof Error ? error.message : "수령 실패");
+    } finally {
+      setClaiming(false);
+    }
+  };
+
   const openWalletModal = async () => {
     await open({ view: walletAddress ? "Account" : "Connect" });
   };
+
+  const canClaim =
+    mode === "chain" &&
+    latestRoundEnd !== null &&
+    lastBet !== null &&
+    latestRoundEnd.winnerIndex === lastBet.agentIndex &&
+    latestRoundEnd.betting.settled;
 
   return (
     <div className="glass-panel flex h-full flex-col rounded-[28px] p-5">
@@ -180,6 +213,17 @@ export function BetPanel({ agents, snapshot, mode, userId, latestRoundEnd }: Pro
           })}
         </div>
       </div>
+
+      {canClaim ? (
+        <button
+          type="button"
+          onClick={() => void claimWinnings()}
+          disabled={claiming}
+          className="mt-4 w-full rounded-2xl bg-emerald-500 px-5 py-3 font-semibold text-black disabled:opacity-60"
+        >
+          {claiming ? "수령 중..." : "상금 수령 (Claim Winnings)"}
+        </button>
+      ) : null}
 
       <div className="mt-4 rounded-2xl border border-white/8 bg-black/30 p-4 text-sm text-slate-200">
         <div>

@@ -161,8 +161,8 @@ contract AgentArena {
     }
 
     // ─── 라운드 종료 ───────────────────────────────────────────
-    /// @notice 라운드 종료. 타이머 만료 후 호출 가능.
-    function endRound() external returns (address winner, string memory winnerName) {
+    /// @notice 라운드 종료. 타이머 만료 후 호출 가능. (owner 또는 타이머 만료 시 누구나)
+    function endRound() external onlyOwner returns (address winner, string memory winnerName) {
         require(currentRoundId > 0, "AgentArena: no round");
         Round storage r = rounds[currentRoundId - 1];
         require(r.active, "AgentArena: not active");

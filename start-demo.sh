@@ -102,8 +102,9 @@ bootstrap_chain_if_needed() {
     DEPLOYER_PRIVATE_KEY="$deployer_key" \
       forge script script/Deploy.s.sol:Deploy --rpc-url "$RPC_URL" --broadcast \
       >"$DEMO_DIR/contracts.deploy.log" 2>&1
-  )
-  node "$ROOT_DIR/scripts/sync-contracts.mjs" >"$DEMO_DIR/contracts.sync.log" 2>&1
+  ) || { echo "❌ Contract deploy failed. See $DEMO_DIR/contracts.deploy.log"; exit 1; }
+  node "$ROOT_DIR/scripts/sync-contracts.mjs" >"$DEMO_DIR/contracts.sync.log" 2>&1 \
+    || { echo "❌ Contract sync failed. See $DEMO_DIR/contracts.sync.log"; exit 1; }
 }
 
 cd "$ROOT_DIR"
@@ -115,7 +116,8 @@ fi
 
 (
   cd "$ROOT_DIR/agent-engine"
-  npm run build >"$DEMO_DIR/agent-engine.build.log" 2>&1
+  npm run build >"$DEMO_DIR/agent-engine.build.log" 2>&1 \
+    || { echo "❌ Engine build failed. See $DEMO_DIR/agent-engine.build.log"; exit 1; }
   ENGINE_DEPLOYER_KEY="${DEPLOYER_PRIVATE_KEY:-}"
   if [ "$MODE" = "chain" ] && [ -z "$ENGINE_DEPLOYER_KEY" ]; then
     ENGINE_DEPLOYER_KEY="$DEFAULT_ANVIL_DEPLOYER_KEY"
