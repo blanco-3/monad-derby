@@ -1,87 +1,204 @@
 # MonadDerby
 
-MonadDerby is a BTC/USD AI race built for Monad Blitz Seoul. Claude, GPT, and Gemini take long/short positions against the same live or synthetic BTC tape while spectators bet on the winner and settle that outcome on-chain.
+MonadDerby is a BTC/USD AI race built for Monad Blitz Seoul.
+
+Three agents with different personalities fight over the same market tape:
+
+- Claude: aggressive breakout momentum
+- GPT: slower mean-reversion
+- Gemini: fast volatility regime switching
+
+Spectators bet on the winning agent, watch the race unfold in real time, and settle the result on-chain.
+
+## What It Proves
+
+- Real-time autonomous agent competition with seeded or fully random race paths
+- On-chain betting and settlement rails with a clean demo-safe off-chain race engine
+- A production-shaped AI integration path with `disabled`, `shadow`, and `live` execution modes
+- A high-frequency, bettor-facing UX that fits Monad's low-latency positioning
+
+## Demo Modes
+
+### Default demo
+
+Stable hackathon mode:
+
+- BTC/USD synthetic market
+- Seeded randomness for reproducibility
+- AI execution disabled by default
+- Betting can run in mock mode or on local chain mode
+
+This is the recommended presentation path.
+
+### Shadow AI demo
+
+Best mode for technical credibility without unpredictable costs:
+
+- Race outcome still uses the simulation strategy
+- Real AI calls are optionally made in the background
+- Proof panel shows provider, parsed JSON, fallback status, and prompt hash
+
+### Live AI demo
+
+Full provider execution path:
+
+- Real AI response can drive the official decision
+- Invalid JSON, timeout, or provider failure falls back immediately
+- Costs are capped per agent per round
 
 ## Architecture
 
 ```text
-Frontend (React + Vite)
-  ├─ WebSocket dashboard for live race state, PnL, odds, and trade feed
-  └─ Betting UI (mock API or on-chain wallet flow)
+Frontend (React + Vite + Reown)
+  ├─ Live dashboard for PnL, clock, odds, proof, and decision feed
+  └─ Wallet-based betting flow or mock betting fallback
 
 Agent Engine (Node + TypeScript)
   ├─ RoundManager
-  ├─ Synthetic BTC market driver with seeded scenarios
-  ├─ Coinbase BTC-USD feed fallback path
-  ├─ Mock runtime for stable demos
-  ├─ Chain runtime for on-chain betting settlement
-  ├─ Mock / AI strategies with shadow/live fallback
-  └─ Express + WebSocket server for race state, odds, and proof logs
+  ├─ BTC market driver
+  ├─ Seeded / full-random scenario engine
+  ├─ Synthetic feed + Coinbase public feed fallback path
+  ├─ Mock runtime + chain runtime
+  ├─ Mock strategies + AI strategy adapter
+  └─ REST + WebSocket server for live state streaming
 
 Contracts (Foundry + Solidity)
   ├─ TestToken
   ├─ SimpleSwap
-  ├─ AgentArena (reported settlement supported)
+  ├─ AgentArena
   └─ BettingPool
 ```
 
 ## Why Monad
 
-- Parallel execution supports multiple agent trades plus live bettor activity without serial UX bottlenecks.
-- Fast block times and low finality target make rapid autonomous trading and live odds updates viable.
-- Full EVM compatibility keeps the stack simple enough for hackathon delivery with Foundry, ethers, and React.
+- Parallel execution fits concurrent agent actions and bettor traffic.
+- Low-latency UX matters when a race updates every second.
+- EVM compatibility keeps the stack practical: Foundry, ethers v6, React, and Reown all fit cleanly.
 
-## Local Run
+## Screenshots
 
-1. Install dependencies:
-   `cd agent-engine && npm install`
-   `cd ../frontend && npm install`
-2. Run contract tests:
-   `cd ../contracts && forge test`
-3. Run engine tests:
-   `cd ../agent-engine && npm test`
-4. Start the default demo:
-   `cd .. && ./start-demo.sh`
-5. Open `http://localhost:5173`
-6. Stop everything with:
-   `./stop-demo.sh`
+Ready state:
+
+![MonadDerby ready dashboard](docs/screenshots/dashboard-ready.png)
+
+Live race:
+
+![MonadDerby live dashboard](docs/screenshots/dashboard-live.png)
+
+## Quick Start
+
+### 1. Install dependencies
+
+```bash
+cd agent-engine && npm install
+cd ../frontend && npm install
+```
+
+### 2. Verify the repo
+
+```bash
+cd /Users/blanco/monad-derby/contracts && forge test
+cd /Users/blanco/monad-derby/agent-engine && npm test
+cd /Users/blanco/monad-derby/frontend && npm run build
+```
+
+### 3. Start the default mock demo
+
+```bash
+cd /Users/blanco/monad-derby
+./start-demo.sh
+```
+
+Open `http://localhost:5173`.
+
+### 4. Stop the demo
+
+```bash
+cd /Users/blanco/monad-derby
+./stop-demo.sh
+```
+
+## One-Command Chain Demo
+
+Local chain mode now bootstraps itself for Anvil demos.
+
+```bash
+cd /Users/blanco/monad-derby
+./start-demo.sh chain
+```
+
+What it does:
+
+- starts Anvil automatically if local RPC is not already running
+- deploys contracts to the local chain
+- syncs ABI and address artifacts into the frontend and engine
+- starts the backend and frontend preview servers
+
+Requirements:
+
+- `anvil`
+- `forge`
+- `node` / `npm`
+
+## Useful Environment Variables
+
+### Agent engine
+
+- `DEMO_MODE=mock|chain`
+- `PRICE_FEED_MODE=synthetic|coinbase`
+- `RACE_RANDOMNESS_MODE=seeded|full-random`
+- `ROUND_SEED=monad-derby`
+- `AI_EXECUTION_MODE=disabled|shadow|live`
+- `AI_MAX_CALLS_PER_AGENT_PER_ROUND=2`
+- `MONAD_RPC_URL=http://127.0.0.1:8545`
+
+### Frontend
+
+- `VITE_AGENT_HTTP_URL`
+- `VITE_AGENT_WS_URL`
+- `VITE_REOWN_PROJECT_ID`
+- `VITE_MONAD_CHAIN_ID`
+- `VITE_MONAD_CHAIN_NAME`
+- `VITE_MONAD_RPC_URL`
+
+See:
+
+- [agent-engine/.env.example](agent-engine/.env.example)
+- [frontend/.env.example](frontend/.env.example)
+- [contracts/.env.example](contracts/.env.example)
 
 ## Contract Flow
 
-1. `BettingPool.resetPool()` opens a fresh round market.
-2. `AgentArena.startRound()` opens the on-chain betting round.
-3. The off-chain engine runs the BTC long/short race and records proof logs.
+1. `BettingPool.resetPool()` opens the next market.
+2. `AgentArena.startRound()` opens the round on-chain.
+3. The off-chain race engine simulates the BTC long/short contest and records proof data.
 4. `AgentArena.finalizeReportedRound()` stores final PnL, winner, and proof hash.
-5. `AgentArena` triggers `BettingPool.settle()` for the winning agent outcome.
+5. `AgentArena` triggers `BettingPool.settle()` for the winning agent pool.
+6. Bettors claim winnings on-chain.
 
-## Chain / Anvil Smoke Path
+## Repo Layout
 
-1. Start Anvil:
-   `anvil`
-2. Deploy contracts:
-   `cd contracts && forge script script/Deploy.s.sol:Deploy --rpc-url http://127.0.0.1:8545 --broadcast --private-key $DEPLOYER_PRIVATE_KEY`
-3. Sync artifacts:
-   `cd .. && node scripts/sync-contracts.mjs`
-4. Start the local chain demo:
-   `./start-demo.sh chain`
+```text
+contracts/      Solidity contracts, tests, and deployment scripts
+agent-engine/   Race runtime, mock/live AI adapters, REST + WebSocket backend
+frontend/       React dashboard, charts, wallet connection, betting panel
+scripts/        Contract artifact sync helpers
+start-demo.sh   One-command demo launcher
+stop-demo.sh    Demo shutdown helper
+```
 
 ## Tech Stack
 
 - Solidity 0.8.20+, Foundry
 - TypeScript, Node.js, Express, ws, ethers v6
 - React 18, Vite, TailwindCSS, Recharts
-- Reown AppKit for wallet connection
-- Coinbase Exchange WebSocket for optional public BTC-USD feed
+- Reown AppKit
+- Coinbase Exchange WebSocket for optional public BTC/USD data
 
 ## Roadmap
 
 - Tournament brackets and multi-race ladders
-- Short / long race presets
-- Higher-confidence AI proof transcripts and replay viewer
-- Deeper real AI provider integration
+- Sprint vs marathon race presets
+- Replay viewer for proofs and decisions
+- Stronger live AI prompt sandboxing
 - Monad testnet and mainnet deployment polish
-
-## Screenshots
-
-- `docs/screenshots/dashboard.png`
-- `docs/screenshots/race-end.png`

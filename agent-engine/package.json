@@ -1,7 +1,7 @@
 {
   "name": "agent-engine",
   "version": "1.0.0",
-  "description": "",
+  "description": "MonadDerby BTC race runtime and WebSocket backend",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -9,8 +9,8 @@
     "test": "node --import tsx --test test/**/*.test.ts",
     "start": "node dist/index.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["monad", "ai", "btc", "trading", "race", "prediction-market"],
+  "author": "blanco-3",
   "license": "MIT",
   "type": "module",
   "dependencies": {
