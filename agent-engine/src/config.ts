@@ -28,6 +28,8 @@ export interface AppConfig {
   countdownSeconds: number;
   feedIntervalMs: number;
   corsOrigin: string;
+  /** Seconds between round end and auto-start of next round. 0 = disabled. */
+  autoRestartDelaySeconds: number;
   race: {
     market: typeof DEFAULT_MARKET_SYMBOL;
     priceFeedMode: "synthetic" | "coinbase";
@@ -60,6 +62,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     countdownSeconds: Number(env.COUNTDOWN_SECONDS ?? DEFAULT_COUNTDOWN_SECONDS),
     feedIntervalMs: Number(env.FEED_INTERVAL_MS ?? DEFAULT_FEED_INTERVAL_MS),
     corsOrigin: env.CORS_ORIGIN ?? "*",
+    autoRestartDelaySeconds: Number(env.AUTO_RESTART_DELAY_SECONDS ?? 8),
     race: {
       market: DEFAULT_MARKET_SYMBOL,
       priceFeedMode: env.PRICE_FEED_MODE === "coinbase" ? "coinbase" : DEFAULT_PRICE_FEED_MODE,

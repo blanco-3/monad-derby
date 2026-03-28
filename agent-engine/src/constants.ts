@@ -28,7 +28,7 @@ export function createDefaultAgentConfigs(env: NodeJS.ProcessEnv): AgentConfig[]
       walletKey: env.AGENT_1_PRIVATE_KEY ?? ANVIL_DEFAULT_PRIVATE_KEYS[1],
       strategy: env.ANTHROPIC_API_KEY ? "ai" : "mock",
       strategyDescription: "Aggressive breakout momentum rider with sharp conviction spikes.",
-      tradeInterval: 1_050,
+      tradeInterval: 620,
       aiConfig: env.ANTHROPIC_API_KEY
         ? {
             provider: "anthropic",
@@ -42,8 +42,8 @@ export function createDefaultAgentConfigs(env: NodeJS.ProcessEnv): AgentConfig[]
       color: "#1D9E75",
       walletKey: env.AGENT_2_PRIVATE_KEY ?? ANVIL_DEFAULT_PRIVATE_KEYS[2],
       strategy: env.OPENAI_API_KEY ? "ai" : "mock",
-      strategyDescription: "Slow mean-reversion trader that fades stretched BTC moves.",
-      tradeInterval: 1_250,
+      strategyDescription: "Aggressive counter-trend fader. Bets against every stretched move.",
+      tradeInterval: 750,
       aiConfig: env.OPENAI_API_KEY
         ? {
             provider: "openai",
@@ -57,8 +57,8 @@ export function createDefaultAgentConfigs(env: NodeJS.ProcessEnv): AgentConfig[]
       color: "#EF9F27",
       walletKey: env.AGENT_3_PRIVATE_KEY ?? ANVIL_DEFAULT_PRIVATE_KEYS[3],
       strategy: env.GOOGLE_API_KEY ? "ai" : "mock",
-      strategyDescription: "Fast volatility switcher that flips with regime changes.",
-      tradeInterval: 850,
+      strategyDescription: "Fastest trader. Flips with every regime change and vol spike.",
+      tradeInterval: 490,
       aiConfig: env.GOOGLE_API_KEY
         ? {
             provider: "google",

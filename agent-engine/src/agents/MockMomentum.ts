@@ -1,56 +1,88 @@
 import type { IStrategy, MarketData, RaceDecision } from "./IStrategy.js";
 import { clamp, createSeededRandom } from "../utils.js";
 
+/**
+ * Claude — Aggressive Momentum.
+ *
+ * Nearly always in a position. Rides trends hard, cuts quickly on reversals.
+ * High sizePercent: 45–90%. Flips direction whenever the momentum signal flips.
+ * "Never flat unless completely confused."
+ */
 export class MockMomentum implements IStrategy {
   name = "MockMomentum";
 
   async decide(market: MarketData): Promise<RaceDecision> {
-    const noise = createSeededRandom(`${market.seed ?? "seed"}:claude:${market.history.length}:${Math.floor(market.elapsed)}`)();
-    const oneSecond = market.recentReturns.oneSecond;
-    const fiveSecond = market.recentReturns.fiveSecond;
-    const impulse = oneSecond * 0.6 + fiveSecond * 0.4;
+    const noise = createSeededRandom(
+      `${market.seed ?? "seed"}:claude:${market.history.length}:${Math.floor(market.elapsed)}`
+    )();
+
+    const r1 = market.recentReturns.oneSecond;
+    const r5 = market.recentReturns.fiveSecond;
+    const r15 = market.recentReturns.fifteenSecond;
+
+    // Composite momentum: weighted recent returns
+    const impulse = r1 * 0.55 + r5 * 0.30 + r15 * 0.15;
     const regime = market.regime.toLowerCase();
     const trending = regime.includes("trend") || regime.includes("breakout");
     const choppy = regime.includes("range") || regime.includes("whipsaw");
-    const reversalTrap = oneSecond !== 0 && fiveSecond !== 0 && Math.sign(oneSecond) !== Math.sign(fiveSecond) && market.volatility > 0.005;
-    let conviction = clamp(Math.abs(impulse) * 16_000 + noise * 12, 14, 92);
-    if (choppy) conviction *= 0.72;
-    if (reversalTrap) conviction *= 0.62;
-    const action =
-      impulse > (trending ? 0.0008 : 0.0012)
-        ? "long"
-        : impulse < (trending ? -0.0008 : -0.0012)
-          ? "short"
-          : trending && Math.abs(impulse) > 0.00045
-            ? impulse > 0
-              ? "long"
-              : "short"
-            : market.history.length >= 6 && !reversalTrap && !choppy && noise > 0.84
-              ? noise > 0.92
-                ? "long"
-                : "short"
-              : "flat";
+
+    // Reversal trap: 1s and 5s signals conflict at high vol
+    const reversalTrap =
+      r1 !== 0 && r5 !== 0 &&
+      Math.sign(r1) !== Math.sign(r5) &&
+      market.volatility > 0.006;
+
+    // Portfolio-aware aggression: falling behind → take more risk
+    const equity = market.portfolio.equity;
+    const pnlRatio = (equity - 1000) / 1000;
+    const myRank = market.leaderboard.findIndex((l) => l.name === "Claude") + 1;
+    const behind = myRank === market.leaderboard.length; // last place
+    const leading = myRank === 1;
+
+    // Base conviction from impulse strength
+    let conviction = clamp(
+      Math.abs(impulse) * 18_000 + noise * 15 + (behind ? 12 : 0),
+      22, 94
+    );
+    if (choppy) conviction *= 0.78;
+    if (reversalTrap) conviction *= 0.65;
+    if (leading && pnlRatio > 0.03) conviction *= 0.88; // protect lead slightly
+
+    // Direction: always commit unless impulse is truly near zero
+    const threshold = trending ? 0.0003 : 0.0005;
+    let action: RaceDecision["action"];
+
+    if (impulse > threshold) {
+      action = "long";
+    } else if (impulse < -threshold) {
+      action = "short";
+    } else if (reversalTrap) {
+      // Take the 1s direction — fast reaction
+      action = r1 > 0 ? "long" : "short";
+    } else {
+      // When uncertain: lean into the longer-term trend + noise tiebreak
+      action = r15 !== 0 ? (r15 > 0 ? "long" : "short") : (noise > 0.5 ? "long" : "short");
+    }
+
+    const sizeBase = clamp(conviction * (trending ? 0.85 : 0.68), 40, behind ? 90 : 78);
 
     return {
       action,
-      sizePercent:
-        action === "flat"
-          ? 0
-          : Math.round(clamp(conviction * (trending ? 0.64 : 0.5), trending ? 16 : 10, noise > 0.94 ? 68 : 54)),
+      sizePercent: Math.round(sizeBase),
       confidence: Math.round(conviction),
       reason:
-        action === "flat"
+        action === "long"
           ? reversalTrap
-            ? "Momentum trap risk rising"
-            : "Breakout not confirmed yet"
-          : action === "long"
-            ? `Momentum breakout ${formatPercent(impulse)}`
-            : `Momentum breakdown ${formatPercent(impulse)}`,
+            ? `Trap fade long ${fmt(r1)}`
+            : `Momentum up ${fmt(impulse)}`
+          : reversalTrap
+            ? `Trap fade short ${fmt(r1)}`
+            : `Momentum down ${fmt(impulse)}`,
       source: "sim",
     };
   }
 }
 
-function formatPercent(value: number): string {
-  return `${value >= 0 ? "+" : ""}${(value * 100).toFixed(2)}%`;
+function fmt(v: number): string {
+  return `${v >= 0 ? "+" : ""}${(v * 100).toFixed(2)}%`;
 }

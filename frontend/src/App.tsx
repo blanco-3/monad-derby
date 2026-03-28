@@ -65,7 +65,7 @@ export default function App() {
   const { agents, chartData, leaderName, handlePnlUpdate, reset } = useAgentPnL();
   const { snapshot, prevOdds, handleOddsUpdate } = useBettingOdds();
   const { connectionState } = useMonadWs({
-    onDecision: (payload) => setDecisionFeed((cur) => [...cur.slice(-99), payload]),
+    onDecision: (payload) => setDecisionFeed((cur) => [...cur.slice(-49), payload]),
     onMarketTick: (payload) => {
       latestPriceRef.current = payload.price;
       setMarketTick(payload);
@@ -239,7 +239,7 @@ export default function App() {
       </main>
 
       {/* ── Bottom: Chat | Decision feed ── */}
-      <section className="mt-5 shrink-0 grid grid-cols-[340px_1fr] gap-5 h-[220px]">
+      <section className="mt-5 shrink-0 grid grid-cols-[300px_1fr] gap-5 h-[240px]">
         <ChatPanel
           wsUrl={import.meta.env.VITE_AGENT_WS_URL ?? "ws://localhost:8787/ws"}
           userId={userId}

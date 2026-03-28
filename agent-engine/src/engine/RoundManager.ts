@@ -288,6 +288,16 @@ export class RoundManager extends EventEmitter {
       agents: this.managedAgents.map((agent) => ({ ...agent.state })),
     });
     await this.broadcastState();
+
+    // Auto-restart: begin the next round after a brief results window.
+    // Gives viewers ~8 seconds to see the winner before the next race.
+    const autoRestartMs = (this.config.autoRestartDelaySeconds ?? 8) * 1000;
+    if (autoRestartMs > 0) {
+      setTimeout(() => {
+        void this.startRound(this.config.roundDurationSeconds);
+      }, autoRestartMs);
+    }
+
     return result;
   }
 
