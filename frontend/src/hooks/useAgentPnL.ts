@@ -1,4 +1,4 @@
-import { startTransition, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { AgentState } from "../types";
 
 export function useAgentPnL() {
@@ -7,19 +7,18 @@ export function useAgentPnL() {
 
   const handlePnlUpdate = useCallback(
     (payload: { agents: AgentState[] }, startedAt: number | null, latestPrice: number | null) => {
-      startTransition(() => {
-        setAgents(payload.agents);
-        setChartData((current) => {
-          const elapsed = startedAt ? Math.max(0, Number(((Date.now() - startedAt) / 1000).toFixed(1))) : current.length * 0.5;
-          const nextPoint: Record<string, number | string> = {
-            elapsed,
-            btcPrice: latestPrice ?? current[current.length - 1]?.btcPrice ?? 0,
-          };
-          payload.agents.forEach((agent) => {
-            nextPoint[agent.name] = agent.pnlPercent;
-          });
-          return [...current.slice(-299), nextPoint];
+      // No startTransition — chart updates must be immediate (live-feel)
+      setAgents(payload.agents);
+      setChartData((current) => {
+        const elapsed = startedAt ? Math.max(0, Number(((Date.now() - startedAt) / 1000).toFixed(1))) : current.length * 0.5;
+        const nextPoint: Record<string, number | string> = {
+          elapsed,
+          btcPrice: latestPrice ?? current[current.length - 1]?.btcPrice ?? 0,
+        };
+        payload.agents.forEach((agent) => {
+          nextPoint[agent.name] = agent.pnlPercent;
         });
+        return [...current.slice(-299), nextPoint];
       });
     },
     [],

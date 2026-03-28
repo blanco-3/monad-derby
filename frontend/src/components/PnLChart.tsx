@@ -170,8 +170,9 @@ export function PnLChart({ data, leaderName, latestPrice, priceSource, seed: _se
             <defs>
               {AGENTS.map(({ name, color }) => (
                 <linearGradient key={name} id={`grad-${name}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={color} stopOpacity={leaderName === name ? 0.28 : 0.12} />
-                  <stop offset="95%" stopColor={color} stopOpacity={0} />
+                  <stop offset="0%"  stopColor={color} stopOpacity={leaderName === name ? 0.38 : 0.18} />
+                  <stop offset="70%" stopColor={color} stopOpacity={leaderName === name ? 0.08 : 0.03} />
+                  <stop offset="100%" stopColor={color} stopOpacity={0} />
                 </linearGradient>
               ))}
               {/* Glow filter for leader */}
@@ -229,11 +230,11 @@ export function PnLChart({ data, leaderName, latestPrice, priceSource, seed: _se
               return (
                 <Area
                   key={name}
-                  type="monotone"
+                  type="basis"
                   dataKey={name}
                   stroke={color}
                   strokeWidth={isLeader ? 2.5 : 1.5}
-                  strokeOpacity={isLeader ? 1 : 0.65}
+                  strokeOpacity={isLeader ? 1 : 0.6}
                   fill={`url(#grad-${name})`}
                   dot={(dotProps) => (
                     <LiveDot
@@ -245,8 +246,6 @@ export function PnLChart({ data, leaderName, latestPrice, priceSource, seed: _se
                     />
                   )}
                   isAnimationActive={false}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
                   activeDot={{ r: 5, strokeWidth: 1.5, stroke: "white", fill: color }}
                 />
               );

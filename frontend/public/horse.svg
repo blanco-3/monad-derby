@@ -1,140 +1,151 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none">
   <defs>
     <!-- Background -->
-    <radialGradient id="bg" cx="50%" cy="45%" r="55%">
-      <stop offset="0%" stop-color="#21196a"/>
-      <stop offset="100%" stop-color="#0a0816"/>
+    <radialGradient id="bg" cx="48%" cy="44%" r="56%">
+      <stop offset="0%" stop-color="#1e1650"/>
+      <stop offset="100%" stop-color="#07050f"/>
     </radialGradient>
-    <!-- Main body gradient -->
-    <linearGradient id="body" x1="15%" y1="5%" x2="80%" y2="95%">
-      <stop offset="0%" stop-color="#c4bfff"/>
-      <stop offset="40%" stop-color="#8b84e8"/>
-      <stop offset="100%" stop-color="#4840a0"/>
+    <!-- Horse body: bright silver-lavender so it pops on dark bg -->
+    <linearGradient id="body" x1="15%" y1="0%" x2="85%" y2="100%">
+      <stop offset="0%"   stop-color="#e8e4ff"/>
+      <stop offset="38%"  stop-color="#a49cec"/>
+      <stop offset="100%" stop-color="#4e48b0"/>
     </linearGradient>
-    <!-- Mane gradient -->
-    <linearGradient id="mane1" x1="100%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#6b62d8"/>
-      <stop offset="100%" stop-color="#2e2870"/>
+    <!-- Mane: WHITE → bright lavender/pink — must contrast with dark bg -->
+    <linearGradient id="maneA" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="45%"  stop-color="#ccc7ff"/>
+      <stop offset="100%" stop-color="#8880d8" stop-opacity="0.55"/>
     </linearGradient>
-    <linearGradient id="mane2" x1="100%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#8880e0" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#3832888" stop-opacity="0.4"/>
+    <linearGradient id="maneB" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#f0e8ff"/>
+      <stop offset="100%" stop-color="#7068c8" stop-opacity="0.45"/>
     </linearGradient>
-    <!-- Soft glow around body -->
-    <filter id="glow" x="-25%" y="-25%" width="150%" height="150%">
-      <feGaussianBlur stdDeviation="2" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <!-- Glow on horse body -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <!-- Mane blur -->
-    <filter id="mblur" x="-20%" y="-10%" width="140%" height="120%">
-      <feGaussianBlur stdDeviation="1.2"/>
+    <!-- Soft halo around the mane so white strands bloom -->
+    <filter id="maneGlow" x="-40%" y="-15%" width="180%" height="130%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
 
-  <!-- Dark background circle -->
+  <!-- Background circle -->
   <circle cx="50" cy="50" r="50" fill="url(#bg)"/>
 
-  <!-- ═══════════════════════════════════════════
-       MANE — rendered BEHIND the head (z-order)
-       Flowing strands going left/backward
-  ════════════════════════════════════════════ -->
+  <!-- ══════════════════════════════════════════
+       MANE — drawn BEHIND the head (lower z)
+       Strands flow LEFT from the crest of the neck.
+       White/lavender on dark bg = clearly visible.
+  ═══════════════════════════════════════════ -->
 
-  <!-- Mane outer shadow / bloom -->
-  <path filter="url(#mblur)" fill="#5a52c0" opacity="0.5" d="
-    M 24 19
-    C 14 24 6 36 6 50
-    C 2 46 0 58 2 70
-    C -2 66 -2 78 4 86
-    L 8 88
-    C 6 78 6 66 8 56
-    C 6 44 12 32 20 24 Z
-  "/>
+  <!-- Bloom / glow halo first -->
+  <path
+    filter="url(#maneGlow)"
+    fill="url(#maneA)" opacity="0.25"
+    d="M 26 15
+       C 12 22 2 40 2 58
+       C -2 66 -2 80 4 90
+       L 10 92
+       C 6 82 6 68 8 56
+       C 8 38 18 24 26 15 Z"
+  />
 
-  <!-- Mane strand 1 — widest, sweeps most dramatically -->
-  <path fill="url(#mane1)" opacity="0.82" d="
-    M 24 19
-    C 16 23 8 34 8 48
-    C 4 44 2 56 4 66
-    C 0 62 0 74 4 82
-    L 10 84
-    C 8 74 8 62 10 52
-    C 10 40 16 30 22 24
-    C 23 22 24 20 24 19 Z
-  "/>
+  <!-- Widest strand — main mane body -->
+  <path
+    fill="url(#maneA)" opacity="0.92"
+    d="M 26 15
+       C 14 22 6 38 6 54
+       C 2 60 0 72 2 82
+       L 10 86
+       C 8 76 8 64 10 52
+       C 12 36 18 24 26 15 Z"
+  />
 
-  <!-- Mane strand 2 — thinner, slight offset -->
-  <path fill="#9088e8" opacity="0.55" d="
-    M 22 26
-    C 14 30 8 42 8 54
-    C 4 52 2 62 4 72
-    L 8 72
-    C 8 64 10 54 12 46
-    C 14 36 18 30 22 26 Z
-  "/>
+  <!-- Mid strand — slightly narrower, shifted -->
+  <path
+    fill="url(#maneA)" opacity="0.70"
+    d="M 24 22
+       C 12 30 6 46 6 62
+       C 4 68 4 78 6 86
+       L 12 88
+       C 10 78 10 66 12 56
+       C 14 42 18 30 24 22 Z"
+  />
 
-  <!-- Mane strand 3 — wispy accent at top -->
-  <path fill="#b0aaee" opacity="0.35" d="
-    M 26 16
-    C 18 20 12 28 10 38
-    C 8 32 8 38 10 44
-    L 14 44
-    C 14 36 18 28 24 20 Z
-  "/>
+  <!-- Accent strand — pink-lavender tone -->
+  <path
+    fill="url(#maneB)" opacity="0.60"
+    d="M 22 30
+       C 12 38 8 52 8 66
+       L 12 68
+       C 12 56 14 44 20 34 Z"
+  />
 
-  <!-- Mane highlight strand -->
-  <path fill="#d0ccff" opacity="0.2" d="
-    M 22 22 C 16 26 12 34 12 44 C 10 42 10 50 12 56 L 14 56 C 12 50 14 40 18 32 C 20 28 22 24 22 22 Z
-  "/>
+  <!-- Thin bright highlight on leading edge of mane -->
+  <path
+    fill="white" opacity="0.45"
+    d="M 24 18 C 16 24 12 36 12 48 C 10 42 10 52 12 60
+       L 14 60 C 14 52 16 40 20 28 Z"
+  />
 
-  <!-- ═══════════════════════════════════════════
+  <!-- ══════════════════════════════════════════
        MAIN HEAD SILHOUETTE
-  ════════════════════════════════════════════ -->
-  <path fill="url(#body)" filter="url(#glow)" d="
-    M 22 90
-    C 18 76 16 64 18 52
-    C 19 44 20 38 22 30
-    C 22 24 22 20 24 18
-    L 30 6
-    L 38 16
-    C 40 15 44 14 48 16
-    C 54 18 60 24 66 34
-    C 70 40 72 46 72 52
-    C 72 58 70 64 66 68
-    C 62 72 56 74 48 74
-    C 44 74 38 72 34 68
-    C 28 64 24 58 24 52
-    C 24 62 26 74 32 84
-    L 44 90
-    L 22 90 Z
-  "/>
+  ═══════════════════════════════════════════ -->
+  <path
+    fill="url(#body)" filter="url(#glow)"
+    d="M 22 90
+       C 18 76 16 62 18 50
+       C 19 42 20 36 22 28
+       C 22 22 22 18 24 16
+       L 30 4
+       L 40 14
+       C 42 13 46 12 50 14
+       C 57 16 64 22 70 34
+       C 74 42 76 50 76 56
+       C 76 62 74 68 70 72
+       C 66 76 60 78 52 78
+       C 46 78 40 76 36 72
+       C 30 68 26 62 26 54
+       C 26 64 28 76 34 86
+       L 46 90
+       L 22 90 Z"
+  />
 
-  <!-- ═══════════════════════════════════════════
+  <!-- ══════════════════════════════════════════
        DETAILS
-  ════════════════════════════════════════════ -->
+  ═══════════════════════════════════════════ -->
 
-  <!-- Ear inner highlight (inner ear = lighter) -->
-  <path fill="#d8d4ff" opacity="0.5" d="M 30 6 L 38 16 L 32 17 Z"/>
+  <!-- Inner ear -->
+  <path fill="#dcd6ff" opacity="0.55" d="M 30 4 L 40 14 L 33 16 Z"/>
 
-  <!-- Face highlight / sheen on nose bridge -->
-  <path fill="white" opacity="0.1" d="
-    M 48 16 C 54 18 60 24 66 34 C 68 38 70 42 70 48
-    C 66 38 60 26 52 20 C 50 18 48 16 48 16 Z
+  <!-- Face sheen / specular highlight on nose bridge -->
+  <path fill="white" opacity="0.13" d="
+    M 50 14 C 57 16 64 22 70 34 C 72 38 74 44 74 50
+    C 70 40 64 28 56 22 C 54 20 52 16 50 14 Z
   "/>
 
-  <!-- Forehead specular -->
-  <ellipse cx="46" cy="22" rx="5" ry="4" fill="white" opacity="0.07" transform="rotate(-25 46 22)"/>
+  <!-- Forehead highlight ellipse -->
+  <ellipse cx="46" cy="24" rx="5.5" ry="4" fill="white" opacity="0.07"
+           transform="rotate(-22 46 24)"/>
 
-  <!-- Eye (dark, slightly off-round, with glint) -->
-  <ellipse cx="58" cy="30" rx="5.5" ry="5" fill="#07071a"/>
-  <ellipse cx="58" cy="30" rx="4.5" ry="4" fill="#0e0d28"/>
-  <circle cx="59.5" cy="28.5" r="2.2" fill="white" opacity="0.7"/>
-  <circle cx="58.5" cy="31" r="0.9" fill="white" opacity="0.2"/>
+  <!-- Eye — large, clear, with bright glint -->
+  <ellipse cx="60" cy="33" rx="6"   ry="5.5" fill="#04040f"/>
+  <ellipse cx="60" cy="33" rx="4.8" ry="4.3" fill="#0c0b24"/>
+  <circle  cx="62" cy="31" r="2.5"  fill="white" opacity="0.78"/>
+  <circle  cx="61" cy="34" r="1"    fill="white" opacity="0.20"/>
 
-  <!-- Nostril (subtle, ellipse with rotation) -->
-  <ellipse cx="69" cy="56" rx="3.2" ry="2" transform="rotate(-20 69 56)" fill="#2c2878" opacity="0.55"/>
+  <!-- Nostril -->
+  <ellipse cx="72" cy="58" rx="3.3" ry="2.0"
+           transform="rotate(-18 72 58)" fill="#28228a" opacity="0.55"/>
 
-  <!-- Chin/jaw muscle shadow -->
-  <path fill="#2e2880" opacity="0.2" d="
-    M 48 74 C 44 74 38 72 34 68 C 32 70 30 72 30 76 C 34 76 42 76 48 74 Z
+  <!-- Jaw / chin shadow -->
+  <path fill="#2a2480" opacity="0.20" d="
+    M 52 78 C 46 78 40 76 36 72
+    C 34 74 32 76 32 80
+    C 36 80 44 80 52 78 Z
   "/>
 </svg>

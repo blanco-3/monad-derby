@@ -64,6 +64,7 @@ export class RoundManager extends EventEmitter {
   private readonly agentIntervals = new Map<string, NodeJS.Timeout>();
   private marketInterval: NodeJS.Timeout | null = null;
   private refreshingMarket = false;
+  private pendingMarketRefresh = false;
   private countdownInterval: NodeJS.Timeout | null = null;
   private endTimer: NodeJS.Timeout | null = null;
   private countdownRemaining: number | null = null;
@@ -232,16 +233,25 @@ export class RoundManager extends EventEmitter {
   }
 
   private async refreshMarket(): Promise<void> {
-    if (this.status.phase !== "live" || this.refreshingMarket) return;
+    if (this.status.phase !== "live") return;
+    // If already running, queue one more refresh — never drop the latest price
+    if (this.refreshingMarket) {
+      this.pendingMarketRefresh = true;
+      return;
+    }
     this.refreshingMarket = true;
     try {
-      const tick = await this.feed.poll();
-      this.status = await this.runtime.getStatus();
-      this.emit("marketTick", tick);
-      await this.refreshPnls();
-      await this.broadcastOdds();
+      do {
+        this.pendingMarketRefresh = false;
+        const tick = await this.feed.poll();
+        this.status = await this.runtime.getStatus();
+        this.emit("marketTick", tick);
+        await this.refreshPnls();
+        await this.broadcastOdds();
+      } while (this.pendingMarketRefresh && this.status.phase === "live");
     } finally {
       this.refreshingMarket = false;
+      this.pendingMarketRefresh = false;
     }
   }
 
