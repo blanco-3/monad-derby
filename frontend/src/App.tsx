@@ -2,6 +2,7 @@ import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import { useEffect, useRef, useState } from "react";
 import { AgentCard } from "./components/AgentCard";
 import { AiProofPanel } from "./components/AiProofPanel";
+import { BtcPriceChart } from "./components/BtcPriceChart";
 import { ChatPanel } from "./components/ChatPanel";
 import { Countdown } from "./components/Countdown";
 import { PnLChart } from "./components/PnLChart";
@@ -138,7 +139,10 @@ export default function App() {
         {/* Left: branding + status */}
         <div className="flex-1">
           <div className="text-[10px] uppercase tracking-[0.5em] text-muted">Monad Blitz Seoul</div>
-          <h1 className="mt-1 text-4xl font-bold text-white leading-none">MonadDerby</h1>
+          <div className="mt-1 flex items-center gap-3">
+            <img src="/horse.svg" alt="MonadDerby" className="h-10 w-10 rounded-2xl" />
+            <h1 className="text-4xl font-bold text-white leading-none">MonadDerby</h1>
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
             <span className={`rounded-full px-2.5 py-1 ${wsOnline ? "bg-emerald-500/12 text-emerald-300" : "bg-amber-500/12 text-amber-300"}`}>
               {wsOnline ? "● Live" : "○ Reconnecting"}
@@ -201,18 +205,25 @@ export default function App() {
         <RaceHistoryPanel history={history} />
       </section>
 
-      {/* ── Main grid: Chart | QuickBet | AgentCards ── */}
+      {/* ── Main grid: Charts | QuickBet | AgentCards ── */}
       <main className="grid min-h-0 flex-1 grid-cols-[1fr_220px_320px] gap-5">
 
-        {/* Chart */}
-        <PnLChart
-          data={chartData}
-          leaderName={leaderName}
-          latestPrice={marketTick?.price ?? null}
-          priceSource={roundState.priceSource}
-          seed={roundState.seed}
-          regime={marketTick?.regime ?? null}
-        />
+        {/* Left column: BTC real-time + AI Race PnL */}
+        <div className="flex min-h-0 flex-col gap-4">
+          <div className="h-[190px] shrink-0">
+            <BtcPriceChart />
+          </div>
+          <div className="min-h-0 flex-1">
+            <PnLChart
+              data={chartData}
+              leaderName={leaderName}
+              latestPrice={marketTick?.price ?? null}
+              priceSource={roundState.priceSource}
+              seed={roundState.seed}
+              regime={marketTick?.regime ?? null}
+            />
+          </div>
+        </div>
 
         {/* Quick Bet sidebar */}
         <QuickBet
